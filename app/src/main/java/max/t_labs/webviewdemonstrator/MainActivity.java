@@ -1,22 +1,24 @@
 package max.t_labs.webviewdemonstrator;
 
 import android.app.Activity;
-import android.app.DownloadManager;
-import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
-import android.net.Uri;
-import android.os.Build;
+//import android.app.DownloadManager;
+//import android.content.Context;
+//import android.content.Intent;
+import android.content.pm.ActivityInfo;
+//import android.content.pm.PackageManager;
+//import android.content.pm.ResolveInfo;
+//import android.content.res.Configuration;
+//import android.net.Uri;
+//import android.os.Build;
 import android.os.Environment;
-import android.support.v7.app.ActionBarActivity;
+//import android.provider.Settings;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+//import android.view.MotionEvent;
 import android.view.Window;
 import android.view.WindowManager;
-import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -24,30 +26,31 @@ import android.webkit.WebViewClient;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.List;
+import java.util.Calendar;
+//import java.util.List;
 
-import static android.content.pm.PackageManager.*;
+//import static android.content.pm.PackageManager.*;
 
 
 public class MainActivity extends Activity {
 
     private WebView mWebView;
 
-    public static boolean isDownloadManagerAvailable(Context context) {
-        try {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.GINGERBREAD) {
-                return false;
-            }
-            Intent intent = new Intent(Intent.ACTION_MAIN);
-            intent.addCategory(Intent.CATEGORY_LAUNCHER);
-            intent.setClassName("com.android.providers.downloads.ui", "com.android.providers.downloads.ui.DownloadList");
-            List<ResolveInfo> list = context.getPackageManager().queryIntentActivities(intent,
-                    MATCH_DEFAULT_ONLY);
-            return list.size() > 0;
-        } catch (Exception e) {
-            return false;
-        }
-    }
+//    public static boolean isDownloadManagerAvailable(Context context) {
+//        try {
+//            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.GINGERBREAD) {
+//                return false;
+//            }
+//            Intent intent = new Intent(Intent.ACTION_MAIN);
+//            intent.addCategory(Intent.CATEGORY_LAUNCHER);
+//            intent.setClassName("com.android.providers.downloads.ui", "com.android.providers.downloads.ui.DownloadList");
+//            List<ResolveInfo> list = context.getPackageManager().queryIntentActivities(intent,
+//                    MATCH_DEFAULT_ONLY);
+//            return list.size() > 0;
+//        } catch (Exception e) {
+//            return false;
+//        }
+//    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,8 +60,14 @@ public class MainActivity extends Activity {
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_main);
 
+        WindowManager.LayoutParams layoutParams = getWindow().getAttributes();
+        layoutParams.screenBrightness = 1.0f;
+        getWindow().setAttributes(layoutParams);
+
+
         mWebView = (WebView) findViewById(R.id.activity_main_webview);
 
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LOCKED);
 
         // enable Javascript
         WebSettings webSettings = mWebView.getSettings();
@@ -73,29 +82,26 @@ public class MainActivity extends Activity {
                     String content = url;
                     FileOutputStream outputStream;
 
-                    File path = Environment.getExternalStorageDirectory();
-                    File file = new File(path, "newFile2.txt");
+                    Calendar c = Calendar.getInstance();
+
+                    String fileName = Long.toString(c.getTimeInMillis()) + ".txt";
+
+                    File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+                    File file = new File(path, fileName);
 
                     try {
-//                        file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "newCache.txt");
-
-                        outputStream = new FileOutputStream(file, true);
+                        outputStream = new FileOutputStream(file);
                         outputStream.write(content.getBytes());
                         outputStream.close();
-                        Log.i("saveData", "Data Saved");
 
-                        Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-                        intent.setData(Uri.fromFile(file));
+                        Log.i("saved file:", fileName);
 
-                        sendBroadcast(intent);
                         return false;
 
                     } catch (IOException e) {
                         Log.e("SAVE DATA", "Could not write file " + e.getMessage());
                         e.printStackTrace();
                     }
-
-
 
 //                    Uri source = Uri.parse(url);
 //                    DownloadManager.Request request = new DownloadManager.Request(source);
@@ -119,11 +125,12 @@ public class MainActivity extends Activity {
 //        mWebView.setWebChromeClient(new WebChromeClient(){        });
 
         // load that page
-        mWebView.loadUrl("file:///android_asset/index.html");
+//        mWebView.loadUrl("file:///android_asset/index.html");
+        mWebView.loadUrl("file:///"
+                + Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                + "/index.html");
 //        mWebView.loadUrl("http://www.princexml.com/samples/");
-
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
